@@ -144,7 +144,7 @@ example_result2 = [{
 #   1: Inclusive match, some values other than argument found
 #   2: Partial match, value is found in some but not all results
 def check_field(res, field, value):
-    supported_fields = ["mdf.elements", "mdf.source_name", "mdf.mdf_id", "mdf.resource_type"]
+    supported_fields = ["mdf.elements", "mdf.source_name", "mdf.mdf_id", "mdf.resource_type", "mdf.data_contact"]
     if field not in supported_fields:
         raise ValueError("Implement or re-spell "
                          + field
@@ -164,6 +164,8 @@ def check_field(res, field, value):
             vals = [r["mdf"]["source_name"]]
         elif field == "mdf.mdf_id":
             vals = [r["mdf"]["mdf_id"]]
+        elif field == "mdf.data_contact":
+            vals = [r["mdf"]["data_contact"]]
         elif field == "mdf.resource_type":
             vals = [r["mdf"]["resource_type"]]
         # If a result does not contain the value, no match
@@ -326,6 +328,24 @@ def test_forge_match_elements():
     assert check_field(res2, "mdf.elements", "Cu") == 1
 
 
+def test_forge_match_contacts():
+    # One title
+    f1 = forge.Forge()
+    contacts1 = ["Torralba"]
+    res1, info1 = f1.match_contacts(contacts1).search(limit=10000, info=True)
+    assert res1 != []
+    check_val1 = check_field(res1, "mdf.data_contact", "Torralba")
+    assert check_val1 == 0
+
+    # Multiple contacts
+    f2 = forge.Forge()
+    contacts2 = ["\"Antonio S.\"", "Torralba"]
+    res2, info2 = f2.match_contacts(contacts2).search(limit=10000, info=True)
+    assert res2 != []
+    check_val2 = check_field(res2, "mdf.data_contact", "Antonio S. Torralba")
+    assert check_val2 == 2
+
+
 def test_forge_match_resource_types():
     f1 = forge.Forge()
     # Test one type
@@ -376,6 +396,17 @@ def test_forge_search_by_elements():
     assert all([r in res2 for r in res1]) and all([r in res1 for r in res2])
     assert check_field(res1, "mdf.elements", "Al") == 1
     assert check_field(res1, "mdf.source_name", "oqmd") == 2
+
+
+def test_forge_search_by_contacts():
+    f1 = forge.Forge()
+    f2 = forge.Forge()
+    contacts1 = ["\"Antonio S. Torralba\""]
+    contacts2 = ["Torralba"]
+    res1, info1 = f1.search_by_contacts(contacts1, limit=10000, info=True)
+    res2, info2 = f2.search_by_contacts(contacts2, limit=10000, info=True)
+    assert check_field(res1, "mdf.data_contact", "Antonio S. Torralba") == 0
+    assert check_field(res2, "mdf.data_contact", "Antonio S. Torralba") == 2
 
 
 def test_forge_aggregate_source():
