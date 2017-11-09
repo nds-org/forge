@@ -327,7 +327,7 @@ def test_forge_match_elements():
     assert check_field(res2, "mdf.elements", "Al") == 1
     assert check_field(res2, "mdf.elements", "Cu") == 1
 
-
+@pytest.mark.match_contacts
 def test_forge_match_contacts():
     # One title
     f1 = forge.Forge()
@@ -397,7 +397,7 @@ def test_forge_search_by_elements():
     assert check_field(res1, "mdf.elements", "Al") == 1
     assert check_field(res1, "mdf.source_name", "oqmd") == 2
 
-
+@pytest.mark.search_by_contacts
 def test_forge_search_by_contacts():
     f1 = forge.Forge()
     f2 = forge.Forge()
