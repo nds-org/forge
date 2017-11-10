@@ -149,7 +149,8 @@ def check_field(res, field, value):
         "mdf.mdf_id",
         "mdf.resource_type",
         "mdf.title",
-        "mdf.data_contact"
+        "mdf.data_contact",
+        "mdf.tags"
     ]
     if field not in supported_fields:
         raise ValueError("Implement or re-spell "
@@ -170,12 +171,19 @@ def check_field(res, field, value):
             vals = [r["mdf"]["source_name"]]
         elif field == "mdf.mdf_id":
             vals = [r["mdf"]["mdf_id"]]
-        elif field == "mdf.data_contact":
-            vals = [r["mdf"]["data_contact"]]
         elif field == "mdf.resource_type":
             vals = [r["mdf"]["resource_type"]]
+        elif field == "mdf.data_contact":
+            vals = [r["mdf"]["data_contact"]]
         elif field == "mdf.title":
             vals = [r["mdf"]["title"]]
+        elif field == "mdf.tags":
+            # mdf.tags field is already a list
+            try:
+                vals = r["mdf"]["tags"]
+            except KeyError:
+                vals = []
+
         # If a result does not contain the value, no match
         if value not in vals:
             all_match = False
@@ -335,6 +343,7 @@ def test_forge_match_elements():
     assert check_field(res2, "mdf.elements", "Al") == 1
     assert check_field(res2, "mdf.elements", "Cu") == 1
 
+
 @pytest.mark.match_contacts
 def test_forge_match_contacts():
     # One title
@@ -368,6 +377,35 @@ def test_forge_match_titles():
     res2 = f2.match_titles(titles2).search()
     assert res2 != []
     assert check_field(res2, "mdf.title", "Cytochrome QSAR - C13F2N6O") == 2
+
+
+def test_forge_match_tags():
+    # Get one tag
+    f0 = forge.Forge()
+    res0 = f0.search("mdf.source_name:trinkle_elastic_fe_bcc", advanced=True, limit=1)
+    tags1 = res0[0]["mdf"]["tags"][0]
+    # One tag
+    f1 = forge.Forge()
+    res1 = f1.match_tags(tags1).search()
+    assert check_field(res1, "mdf.tags", tags1) == 2
+
+    f2 = forge.Forge()
+    tags2 = "\"ab initio\""
+    f2.match_tags(tags2)
+    res2 = f2.search()
+    # Elasticsearch splits ["ab-initio"] into ["ab", "initio"]
+    assert check_field(res2, "mdf.tags", "ab-initio") == 2
+
+    # Multiple tags
+    f3 = forge.Forge()
+    tags3 = ["\"density functional theory calculations\"", "\"X-ray\""]
+    res3 = f3.match_tags(tags3, match_all=True).search()
+    # "source_name": "ge_nanoparticles",
+    # "tags": [ "amorphization","density functional theory calculations","Ge nanoparticles",
+    #           "high pressure","phase transformation","Raman","X-ray absorption","zip" ]
+    assert check_field(res3, "mdf.tags", "Raman") == 1
+    assert check_field(res3, "mdf.tags", "X-ray absorption") == 1
+    assert check_field(res3, "mdf.tags", "density functional theory calculations") == 1
 
 
 def test_forge_match_resource_types():
@@ -443,6 +481,24 @@ def test_forge_search_by_titles():
     titles2 = ["Tungsten"]
     res2 = f2.search_by_titles(titles2)
     assert check_field(res2, "mdf.title", "AMCS - Tungsten") == 2
+
+
+def test_forge_search_by_tags():
+    f1 = forge.Forge()
+    tags1 = "DFT"
+    res1 = f1.search_by_tags(tags1)
+    assert check_field(res1, "mdf.tags", "DFT") == 2
+
+    f2 = forge.Forge()
+    tags2 = ["\"Density Functional Theory\"", "\"X-ray\""]
+    res2 = f2.search_by_tags(tags2, match_all=True)
+    f3 = forge.Forge()
+    tags3 = ["\"Density Functional Theory\"", "\"X-ray\""]
+    res3 = f3.search_by_tags(tags3, match_all=False)
+
+    # res2 is a subset of res3
+    assert len(res3) > len(res2)
+    assert all([r in res3 for r in res2])
 
 
 def test_forge_aggregate_source():
