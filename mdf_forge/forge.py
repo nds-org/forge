@@ -408,9 +408,17 @@ class Forge:
         if isinstance(contacts, string_types):
             contacts = [contacts]
 
-        self.match_field(field="mdf.data_contact", value=contacts[0], required=True, new_group=True)
+        subfields = ["given_name", "family_name", "full_name"]
+        self.match_field(field="mdf.data_contact." + subfields[0], value=contacts[0], required=False, new_group=True)
+        for subfield in subfields[1:]:
+            self.match_field(field="mdf.data_contact." + subfield, value=contacts[0], required=False, new_group=False)
+
         for contact in contacts[1:]:
-            self.match_field(field="mdf.data_contact", value=contact, required=match_all, new_group=False)
+            self.match_field(field="mdf.data_contact." + subfields[0], value=contact, required=match_all,
+                             new_group=True)
+            for subfield in subfields[1:]:
+                self.match_field(field="mdf.data_contact." + subfield, value=contact, required=False,
+                                 new_group=False)
         return self
 
 
