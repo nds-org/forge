@@ -393,11 +393,12 @@ class Forge:
                              new_group=False)
         return self
 
-    def match_contacts(self, contacts, match_all=True):
+    def match_contacts(self, contacts, type=None, match_all=True):
         """Add titles to the query.
 
         Arguments:
         contacts (str or list of str): The contact names to match.
+        type (str): Type of contract information such as email, institution, github. Default None
         match_all (bool): If True, will add with AND. If False, will use OR. Default True.
 
         Returns:
@@ -408,7 +409,15 @@ class Forge:
         if isinstance(contacts, string_types):
             contacts = [contacts]
 
-        subfields = ["given_name", "family_name", "full_name"]
+        if type=="email":
+            subfields = ["email"]
+        elif type == "institution":
+            subfields = ["institution"]
+        elif type == "github":
+            subfields = ["github"]
+        else:
+            subfields = ["given_name", "family_name", "full_name"]
+
         self.match_field(field="mdf.data_contact." + subfields[0], value=contacts[0], required=False, new_group=True)
         for subfield in subfields[1:]:
             self.match_field(field="mdf.data_contact." + subfield, value=contacts[0], required=False, new_group=False)
@@ -564,12 +573,13 @@ class Forge:
         return self.match_tags(tags, match_all=match_all).search(limit=limit, info=info)
 
 
-    def search_by_contacts(self, contacts=[], limit=None, match_all=True, info=False):
+    def search_by_contacts(self, contacts=[], type=None, limit=None, match_all=True, info=False):
         """Execute a search for the given contact names.
         search_by_contacts([x]) is equivalent to match_contacts([x]).search()
 
         Arguments:
         contacts (list of str): The contact names to match. Default [].
+        type (str): Type of contract information such as email, institution, github. Default None
         limit (int): The maximum number of results to return. The max for this argument is the SEARCH_LIMIT imposed by Globus Search.
         match_all (bool): If True, will add elements with AND.
                           If False, will use OR.
@@ -581,7 +591,7 @@ class Forge:
         list (if info=False): The results.
         tuple (if info=True): The results, and a dictionary of query information.
         """
-        return (self.match_contacts(contacts, match_all=match_all)
+        return (self.match_contacts(contacts, type=type, match_all=match_all)
             .search(limit=limit, info=info))
 
 
