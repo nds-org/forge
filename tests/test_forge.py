@@ -288,6 +288,7 @@ def check_field(res, field, value):
         "mdf.mdf_id",
         "mdf.resource_type",
         "mdf.title",
+        "mdf.data_contributor",
         "mdf.tags"
     ]
     if field not in supported_fields:
@@ -313,6 +314,14 @@ def check_field(res, field, value):
             vals = [r["mdf"]["resource_type"]]
         elif field == "mdf.title":
             vals = [r["mdf"]["title"]]
+        elif field == "mdf.data_contributor":
+            vals = []
+            vals.append(r["mdf"]["data_contributor"]["full_name"])
+            vals.append(r["mdf"]["data_contributor"]["family_name"])
+            vals.append(r["mdf"]["data_contributor"]["given_name"])
+            vals.append(r["mdf"]["data_contributor"]["email"])
+            vals.append(r["mdf"]["data_contributor"]["github"])
+            vals.append(r["mdf"]["data_contributor"]["institution"])
         elif field == "mdf.tags":
             # mdf.tags field is already a list
             try:
@@ -509,6 +518,31 @@ def test_forge_match_titles():
     assert f3.match_titles("") == f3
 
 
+@pytest.mark.match_contributors
+def test_forge_match_contributors():
+    # One contributor
+    f1 = forge.Forge()
+    contributors1 = ["Pike"]
+    res1, info1 = f1.match_contributors(contributors1).search(limit=10, info=True)
+    assert res1 != []
+    check_val1 = check_field(res1, "mdf.data_contributor", "Pike")
+    assert check_val1 == 1
+    # Multiple contributors
+    f2 = forge.Forge()
+    contributors2 = ["\"Evan Pike\"", "\"Michael Fellinger\""]
+    res2, info2 = f2.match_contributors(contributors2, match_all=False).search(limit=10, info=True)
+    assert res2 != []
+    check_val2 = check_field(res2, "mdf.data_contributor", "Evan Pike")
+    assert check_val2 == 2
+    # Institution
+    f3 = forge.Forge()
+    contributors3 = ["\"The University of Chicago\""]
+    res3, info3 = f3.match_contributors(contributors3, type = "institution").search(limit=10, info=True)
+    assert res3 != []
+    check_val3 = check_field(res3, "mdf.data_contributor", "The University of Chicago")
+    assert check_val3 == 2
+
+
 def test_forge_match_tags():
     # Get one tag
     f0 = forge.Forge()
@@ -614,6 +648,23 @@ def test_forge_search_by_titles():
     titles2 = ["Tungsten"]
     res2 = f2.search_by_titles(titles2)
     assert check_field(res2, "mdf.title", "AMCS - Tungsten") == 2
+
+
+@pytest.mark.search_by_contributors
+def test_forge_search_by_contributors():
+    f1 = forge.Forge()
+    f2 = forge.Forge()
+    f3 = forge.Forge()
+    contributors1 = ["\"Evan Pike\""]
+    contributors2 = ["Pike"]
+    contributors3 = ["dep78@uchicago.edu"]
+    contributors4 = ["dep78"] # github
+    res1, info1 = f1.search_by_contributors(contributors1, limit=10, info=True)
+    res2, info2 = f2.search_by_contributors(contributors2, limit=10, info=True)
+    res3, info3 = f3.search_by_contributors(contributors3, type = "email", limit=10, info=True)
+    assert check_field(res1, "mdf.data_contributor", "Evan Pike") == 1
+    assert check_field(res2, "mdf.data_contributor", "Evan Pike") == 1
+    assert check_field(res3, "mdf.data_contributor", "dep78@uchicago.edu") == 2
 
 
 def test_forge_search_by_tags():

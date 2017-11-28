@@ -394,6 +394,42 @@ class Forge:
         return self
 
 
+    def match_contributors(self, contributors, type=None, match_all=True):
+        """Add titles to the query.
+        Arguments:
+        contributors (str or list of str): The contributor names to match.
+        type (str): Type of contributors' information such as email, institution, github. Default None
+        match_all (bool): If True, will add with AND. If False, will use OR. Default True.
+        Returns:
+        self (Forge): For chaining.
+        """
+        if not contributors:
+            return self
+        if isinstance(contributors, string_types):
+            contributors = [contributors]
+
+        if type == "email":
+            subfields = ["email"]
+        elif type == "institution":
+            subfields = ["institution"]
+        elif type == "github":
+            subfields = ["github"]
+        else:
+            subfields = ["given_name", "family_name", "full_name"]
+
+        self.match_field(field="mdf.data_contributor." + subfields[0], value=contributors[0], required=False, new_group=True)
+        for subfield in subfields[1:]:
+            self.match_field(field="mdf.data_contributor." + subfield, value=contributors[0], required=False, new_group=False)
+
+        for contributor in contributors[1:]:
+            self.match_field(field="mdf.data_contributor." + subfields[0], value=contributor, required=match_all,
+                             new_group=True)
+            for subfield in subfields[1:]:
+                self.match_field(field="mdf.data_contributor." + subfield, value=contributor, required=False,
+                                 new_group=False)
+        return self
+
+
     def match_tags(self, tags, match_all=True):
         """Add tags to the query.
 
@@ -509,6 +545,27 @@ class Forge:
         tuple (if info=True): The results, and a dictionary of query information.
         """
         return self.match_titles(titles).search(limit=limit, info=info)
+
+
+    def search_by_contributors(self, contributors=[], type=None, limit=None, match_all=True, info=False):
+        """Execute a search for the given contact names.
+        search_by_contributors([x]) is equivalent to match_contributors([x]).search()
+        Arguments:
+        contributors (list of str): The contributor names to match. Default [].
+        type (str): Type of contributors information such as email, institution, github. Default None
+        limit (int): The maximum number of results to return. The max for this argument is the SEARCH_LIMIT imposed by Globus Search.
+        match_all (bool): If True, will add elements with AND.
+                          If False, will use OR.
+                          Default True.
+        info (bool): If False, search will return a list of the results.
+                    If True, search will return a tuple containing the results list,
+                     and other information about the query. Default False.
+        Returns:
+        list (if info=False): The results.
+        tuple (if info=True): The results, and a dictionary of query information.
+        """
+        return (self.match_contributors(contributors, type=type, match_all=match_all)
+                .search(limit=limit, info=info))
 
 
     def search_by_tags(self, tags, limit=None, match_all=True, info=False):
