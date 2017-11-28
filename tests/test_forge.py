@@ -522,24 +522,24 @@ def test_forge_match_titles():
 def test_forge_match_authors():
     # One author
     f1 = forge.Forge()
-    authors1 = ["Pike"]
+    authors1 = ["Bowler"]
     res1, info1 = f1.match_authors(authors1).search(limit=10, info=True)
     assert res1 != []
-    check_val1 = check_field(res1, "mdf.author", "Pike")
+    check_val1 = check_field(res1, "mdf.author", "Bowler")
     assert check_val1 == 1
     # Multiple authors
     f2 = forge.Forge()
-    authors2 = ["\"Evan Pike\"", "\"Michael Fellinger\""]
+    authors2 = ["\"David R. Bowler\"", "\"Michael Fellinger\""]
     res2, info2 = f2.match_authors(authors2, match_all=False).search(limit=10, info=True)
     assert res2 != []
-    check_val2 = check_field(res2, "mdf.author", "Evan Pike")
+    check_val2 = check_field(res2, "mdf.author", "David R. Bowler")
     assert check_val2 == 2
     # Institution
     f3 = forge.Forge()
-    authors3 = ["\"The University of Chicago\""]
+    authors3 = ["\"London Centre for Nanotechnology\""]
     res3, info3 = f3.match_authors(authors3, type = "institution").search(limit=10, info=True)
     assert res3 != []
-    check_val3 = check_field(res3, "mdf.author", "The University of Chicago")
+    check_val3 = check_field(res3, "mdf.author", "London Centre for Nanotechnology")
     assert check_val3 == 2
 
 
@@ -655,16 +655,15 @@ def test_forge_search_by_authors():
     f1 = forge.Forge()
     f2 = forge.Forge()
     f3 = forge.Forge()
-    authors1 = ["\"Evan Pike\""]
-    authors2 = ["Pike"]
-    authors3 = ["dep78@uchicago.edu"]
-    authors4 = ["dep78"] # github
+    authors1 = ["\"Michael J. Gillan\""]
+    authors2 = ["Miyazaki"]
+    authors3 = ["TORRALBA.Antonio@nims.go.jp"]
     res1, info1 = f1.search_by_authors(authors1, limit=10, info=True)
     res2, info2 = f2.search_by_authors(authors2, limit=10, info=True)
     res3, info3 = f3.search_by_authors(authors3, type = "email", limit=10, info=True)
-    assert check_field(res1, "mdf.author", "Evan Pike") == 1
-    assert check_field(res2, "mdf.author", "Evan Pike") == 1
-    assert check_field(res3, "mdf.author", "dep78@uchicago.edu") == 2
+    assert check_field(res1, "mdf.author", "Michael J. Gillan") == 1
+    assert check_field(res2, "mdf.author", "Tsuyoshi Miyazaki") == 1
+    assert check_field(res3, "mdf.author", "torralba.antonio@nims.go.jp") == 2
 
 
 def test_forge_search_by_tags():
