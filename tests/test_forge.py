@@ -313,7 +313,12 @@ def check_field(res, field, value):
         elif field == "mdf.resource_type":
             vals = [r["mdf"]["resource_type"]]
         elif field == "mdf.data_contact":
-            vals = [r["mdf"]["data_contact"]]
+            vals = []
+            vals.append(r["mdf"]["data_contact"]["full_name"])
+            vals.append(r["mdf"]["data_contact"]["family_name"])
+            vals.append(r["mdf"]["data_contact"]["given_name"])
+            vals.append(r["mdf"]["data_contact"]["email"])
+            vals.append(r["mdf"]["data_contact"]["institution"])
         elif field == "mdf.title":
             vals = [r["mdf"]["title"]]
         elif field == "mdf.tags":
@@ -497,15 +502,17 @@ def test_forge_match_contacts():
     # One title
     f1 = forge.Forge()
     contacts1 = ["Torralba"]
-    res1, info1 = f1.match_contacts(contacts1).search(limit=10000, info=True)
+    res1, info1 = f1.match_contacts(contacts1).search(limit=10, info=True)
     assert res1 != []
     check_val1 = check_field(res1, "mdf.data_contact", "Torralba")
-    assert check_val1 == 0
+    assert check_val1 == 1
 
     # Multiple contacts
     f2 = forge.Forge()
-    contacts2 = ["\"Antonio S.\"", "Torralba"]
-    res2, info2 = f2.match_contacts(contacts2).search(limit=10000, info=True)
+    #contacts2 = ["\"Antonio S.\"", "Torralba"]
+    #contacts2 = ["\"Antonio S. Torralba\"", "\"Joe DiMaggio\""]
+    contacts2 = ["\"Antonio S. Torralba\"", "\"Michael Fellinger\""]
+    res2, info2 = f2.match_contacts(contacts2, match_all=False).search(limit=10, info=True)
     assert res2 != []
     check_val2 = check_field(res2, "mdf.data_contact", "Antonio S. Torralba")
     assert check_val2 == 2
@@ -629,12 +636,16 @@ def test_forge_search_by_elements():
 def test_forge_search_by_contacts():
     f1 = forge.Forge()
     f2 = forge.Forge()
+    f3 = forge.Forge()
     contacts1 = ["\"Antonio S. Torralba\""]
     contacts2 = ["Torralba"]
-    res1, info1 = f1.search_by_contacts(contacts1, limit=10000, info=True)
-    res2, info2 = f2.search_by_contacts(contacts2, limit=10000, info=True)
-    assert check_field(res1, "mdf.data_contact", "Antonio S. Torralba") == 0
-    assert check_field(res2, "mdf.data_contact", "Antonio S. Torralba") == 2
+    contacts3 = ["mfelling@illinois.edu"]
+    res1, info1 = f1.search_by_contacts(contacts1, limit=10, info=True)
+    res2, info2 = f2.search_by_contacts(contacts2, limit=10, info=True)
+    res3, info3 = f3.search_by_contacts(contacts3, type = "email", limit=10, info=True)
+    assert check_field(res1, "mdf.data_contact", "Antonio S. Torralba") == 1
+    assert check_field(res2, "mdf.data_contact", "Antonio S. Torralba") == 1
+    assert check_field(res3, "mdf.data_contact", "mfelling@illinois.edu") == 2
 
 
 def test_forge_search_by_titles():
