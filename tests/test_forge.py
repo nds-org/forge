@@ -288,6 +288,7 @@ def check_field(res, field, value):
         "mdf.mdf_id",
         "mdf.resource_type",
         "mdf.title",
+        "mdf.author",
         "mdf.tags"
     ]
     if field not in supported_fields:
@@ -313,6 +314,14 @@ def check_field(res, field, value):
             vals = [r["mdf"]["resource_type"]]
         elif field == "mdf.title":
             vals = [r["mdf"]["title"]]
+        elif field == "mdf.author":
+            vals = []
+            vals.append(r["mdf"]["author"]["full_name"])
+            vals.append(r["mdf"]["author"]["family_name"])
+            vals.append(r["mdf"]["author"]["given_name"])
+            vals.append(r["mdf"]["author"]["email"])
+            vals.append(r["mdf"]["author"]["github"])
+            vals.append(r["mdf"]["author"]["institution"])
         elif field == "mdf.tags":
             # mdf.tags field is already a list
             try:
@@ -509,6 +518,31 @@ def test_forge_match_titles():
     assert f3.match_titles("") == f3
 
 
+@pytest.mark.match_authors
+def test_forge_match_authors():
+    # One author
+    f1 = forge.Forge()
+    authors1 = ["Pike"]
+    res1, info1 = f1.match_authors(authors1).search(limit=10, info=True)
+    assert res1 != []
+    check_val1 = check_field(res1, "mdf.author", "Pike")
+    assert check_val1 == 1
+    # Multiple authors
+    f2 = forge.Forge()
+    authors2 = ["\"Evan Pike\"", "\"Michael Fellinger\""]
+    res2, info2 = f2.match_authors(authors2, match_all=False).search(limit=10, info=True)
+    assert res2 != []
+    check_val2 = check_field(res2, "mdf.author", "Evan Pike")
+    assert check_val2 == 2
+    # Institution
+    f3 = forge.Forge()
+    authors3 = ["\"The University of Chicago\""]
+    res3, info3 = f3.match_authors(authors3, type = "institution").search(limit=10, info=True)
+    assert res3 != []
+    check_val3 = check_field(res3, "mdf.author", "The University of Chicago")
+    assert check_val3 == 2
+
+
 def test_forge_match_tags():
     # Get one tag
     f0 = forge.Forge()
@@ -614,6 +648,23 @@ def test_forge_search_by_titles():
     titles2 = ["Tungsten"]
     res2 = f2.search_by_titles(titles2)
     assert check_field(res2, "mdf.title", "AMCS - Tungsten") == 2
+
+
+@pytest.mark.search_by_authors
+def test_forge_search_by_authors():
+    f1 = forge.Forge()
+    f2 = forge.Forge()
+    f3 = forge.Forge()
+    authors1 = ["\"Evan Pike\""]
+    authors2 = ["Pike"]
+    authors3 = ["dep78@uchicago.edu"]
+    authors4 = ["dep78"] # github
+    res1, info1 = f1.search_by_authors(authors1, limit=10, info=True)
+    res2, info2 = f2.search_by_authors(authors2, limit=10, info=True)
+    res3, info3 = f3.search_by_authors(authors3, type = "email", limit=10, info=True)
+    assert check_field(res1, "mdf.author", "Evan Pike") == 1
+    assert check_field(res2, "mdf.author", "Evan Pike") == 1
+    assert check_field(res3, "mdf.author", "dep78@uchicago.edu") == 2
 
 
 def test_forge_search_by_tags():
