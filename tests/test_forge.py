@@ -316,12 +316,14 @@ def check_field(res, field, value):
             vals = [r["mdf"]["title"]]
         elif field == "mdf.author":
             vals = []
-            vals.append(r["mdf"]["author"]["full_name"])
-            vals.append(r["mdf"]["author"]["family_name"])
-            vals.append(r["mdf"]["author"]["given_name"])
-            vals.append(r["mdf"]["author"]["email"])
-            vals.append(r["mdf"]["author"]["github"])
-            vals.append(r["mdf"]["author"]["institution"])
+            # mdf.author field must exist; if it does, it is already a list
+            try:
+                for i in range(len(r["mdf"]["author"])):
+                    keys = r["mdf"]["author"][i].keys()
+                    for key in keys:
+                        vals.append(r["mdf"]["author"][i][key])
+            except KeyError:
+                pass
         elif field == "mdf.tags":
             # mdf.tags field is already a list
             try:
@@ -527,6 +529,7 @@ def test_forge_match_authors():
     assert res1 != []
     check_val1 = check_field(res1, "mdf.author", "Bowler")
     assert check_val1 == 1
+
     # Multiple authors
     f2 = forge.Forge()
     authors2 = ["\"David R. Bowler\"", "\"Michael Fellinger\""]
@@ -534,10 +537,11 @@ def test_forge_match_authors():
     assert res2 != []
     check_val2 = check_field(res2, "mdf.author", "David R. Bowler")
     assert check_val2 == 2
+
     # Institution
     f3 = forge.Forge()
     authors3 = ["\"London Centre for Nanotechnology\""]
-    res3, info3 = f3.match_authors(authors3, type = "institution").search(limit=10, info=True)
+    res3, info3 = f3.match_authors(authors3, type="institution").search(limit=10, info=True)
     assert res3 != []
     check_val3 = check_field(res3, "mdf.author", "London Centre for Nanotechnology")
     assert check_val3 == 2
@@ -659,11 +663,12 @@ def test_forge_search_by_authors():
     authors2 = ["Miyazaki"]
     authors3 = ["TORRALBA.Antonio@nims.go.jp"]
     res1, info1 = f1.search_by_authors(authors1, limit=10, info=True)
-    res2, info2 = f2.search_by_authors(authors2, limit=10, info=True)
+    res2, info2 = f2.search_by_authors(authors2, limit=100, info=True)
     res3, info3 = f3.search_by_authors(authors3, type = "email", limit=10, info=True)
     assert check_field(res1, "mdf.author", "Michael J. Gillan") == 1
     assert check_field(res2, "mdf.author", "Tsuyoshi Miyazaki") == 1
-    assert check_field(res3, "mdf.author", "torralba.antonio@nims.go.jp") == 2
+    assert check_field(res3, "mdf.author", "torralba.antonio@nims.go.jp") == -1
+    assert check_field(res3, "mdf.author", "TORRALBA.Antonio@nims.go.jp") == 1
 
 
 def test_forge_search_by_tags():
