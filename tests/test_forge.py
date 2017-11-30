@@ -307,12 +307,14 @@ def check_field(res, field, value):
             vals = [r["mdf"]["title"]]
         elif field == "mdf.data_contributor":
             vals = []
-            vals.append(r["mdf"]["data_contributor"]["full_name"])
-            vals.append(r["mdf"]["data_contributor"]["family_name"])
-            vals.append(r["mdf"]["data_contributor"]["given_name"])
-            vals.append(r["mdf"]["data_contributor"]["email"])
-            vals.append(r["mdf"]["data_contributor"]["github"])
-            vals.append(r["mdf"]["data_contributor"]["institution"])
+            # mdf.contributor field must exist; if it does, it is already a list
+            try:
+                for i in range(len(r["mdf"]["data_contributor"])):
+                    keys = r["mdf"]["data_contributor"][i].keys()
+                    for key in keys:
+                        vals.append(r["mdf"]["data_contributor"][i][key])
+            except KeyError:
+                pass
         elif field == "mdf.tags":
             # mdf.tags field is already a list
             try:
@@ -518,20 +520,22 @@ def test_forge_match_contributors():
     assert res1 != []
     check_val1 = check_field(res1, "mdf.data_contributor", "Pike")
     assert check_val1 == 1
+
     # Multiple contributors
     f2 = forge.Forge()
     contributors2 = ["\"Evan Pike\"", "\"Michael Fellinger\""]
     res2, info2 = f2.match_contributors(contributors2, match_all=False).search(limit=10, info=True)
     assert res2 != []
     check_val2 = check_field(res2, "mdf.data_contributor", "Evan Pike")
-    assert check_val2 == 2
+    assert check_val2 == 1
+
     # Institution
     f3 = forge.Forge()
     contributors3 = ["\"The University of Chicago\""]
-    res3, info3 = f3.match_contributors(contributors3, type = "institution").search(limit=10, info=True)
+    res3, info3 = f3.match_contributors(contributors3, type="institution").search(limit=10, info=True)
     assert res3 != []
     check_val3 = check_field(res3, "mdf.data_contributor", "The University of Chicago")
-    assert check_val3 == 2
+    assert check_val3 == 1
 
 
 def test_forge_match_tags():
@@ -655,7 +659,7 @@ def test_forge_search_by_contributors():
     res3, info3 = f3.search_by_contributors(contributors3, type = "email", limit=10, info=True)
     assert check_field(res1, "mdf.data_contributor", "Evan Pike") == 1
     assert check_field(res2, "mdf.data_contributor", "Evan Pike") == 1
-    assert check_field(res3, "mdf.data_contributor", "dep78@uchicago.edu") == 2
+    assert check_field(res3, "mdf.data_contributor", "dep78@uchicago.edu") == 1
 
 
 def test_forge_search_by_tags():

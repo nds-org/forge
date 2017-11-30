@@ -382,7 +382,7 @@ class Forge:
 
 
     def match_contributors(self, contributors, type=None, match_all=True):
-        """Add titles to the query.
+        """Add contributors to the query.
         Arguments:
         contributors (str or list of str): The contributor names to match.
         type (str): Type of contributors' information such as email, institution, github. Default None
