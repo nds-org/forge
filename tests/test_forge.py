@@ -504,8 +504,7 @@ def test_forge_match_contacts():
 
     # Multiple contacts
     f2 = forge.Forge()
-    #contacts2 = ["\"Antonio S.\"", "Torralba"]
-    #contacts2 = ["\"Antonio S. Torralba\"", "\"Joe DiMaggio\""]
+    # contacts2 = ["\"Antonio S. Torralba\"", "\"Joe DiMaggio\""]
     contacts2 = ["\"Antonio S. Torralba\"", "\"Michael Fellinger\""]
     res2, info2 = f2.match_contacts(contacts2, match_all=False).search(limit=10, info=True)
     assert res2 != []
@@ -651,6 +650,7 @@ def test_forge_search_by_elements():
     assert check_field(res1, "mdf.elements", "Al") == 1
     assert check_field(res1, "mdf.source_name", "oqmd") == 2
 
+
 @pytest.mark.search_by_contacts
 def test_forge_search_by_contacts():
     f1 = forge.Forge()
@@ -661,7 +661,7 @@ def test_forge_search_by_contacts():
     contacts3 = ["mfelling@illinois.edu"]
     res1, info1 = f1.search_by_contacts(contacts1, limit=10, info=True)
     res2, info2 = f2.search_by_contacts(contacts2, limit=10, info=True)
-    res3, info3 = f3.search_by_contacts(contacts3, type = "email", limit=10, info=True)
+    res3, info3 = f3.search_by_contacts(contacts3, type="email", limit=10, info=True)
     assert check_field(res1, "mdf.data_contact", "Antonio S. Torralba") == 1
     assert check_field(res2, "mdf.data_contact", "Antonio S. Torralba") == 1
     assert check_field(res3, "mdf.data_contact", "mfelling@illinois.edu") == 2

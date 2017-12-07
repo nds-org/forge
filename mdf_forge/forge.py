@@ -400,7 +400,6 @@ class Forge:
                              new_group=False)
         return self
 
-
     def match_contacts(self, contacts, type=None, match_all=True):
         """Add contacts to the query.
 
@@ -417,7 +416,7 @@ class Forge:
         if isinstance(contacts, string_types):
             contacts = [contacts]
 
-        if type=="email":
+        if type == "email":
             subfields = ["email"]
         elif type == "institution":
             subfields = ["institution"]
@@ -426,18 +425,19 @@ class Forge:
         else:
             subfields = ["given_name", "family_name", "full_name"]
 
-        self.match_field(field="mdf.data_contact." + subfields[0], value=contacts[0], required=False, new_group=True)
+        self.match_field(field="mdf.data_contact." + subfields[0], value=contacts[0],
+                         required=False, new_group=True)
         for subfield in subfields[1:]:
-            self.match_field(field="mdf.data_contact." + subfield, value=contacts[0], required=False, new_group=False)
+            self.match_field(field="mdf.data_contact." + subfield, value=contacts[0],
+                             required=False, new_group=False)
 
         for contact in contacts[1:]:
-            self.match_field(field="mdf.data_contact." + subfields[0], value=contact, required=match_all,
-                             new_group=True)
+            self.match_field(field="mdf.data_contact." + subfields[0], value=contact,
+                             required=match_all, new_group=True)
             for subfield in subfields[1:]:
-                self.match_field(field="mdf.data_contact." + subfield, value=contact, required=False,
-                                 new_group=False)
+                self.match_field(field="mdf.data_contact." + subfield, value=contact,
+                                 required=False, new_group=False)
         return self
-
 
     def match_tags(self, tags, match_all=True):
         """Add tags to the query.
@@ -629,7 +629,6 @@ class Forge:
 
         return self.match_tags(tags, match_all=match_all).search(limit=limit, info=info)
 
-
     def search_by_contacts(self, contacts=[], type=None, limit=None, match_all=True, info=False):
         """Execute a search for the given contact names.
         search_by_contacts([x]) is equivalent to match_contacts([x]).search()
@@ -637,7 +636,8 @@ class Forge:
         Arguments:
         contacts (list of str): The contact names to match. Default [].
         type (str): Type of contract information such as email, institution, github. Default None
-        limit (int): The maximum number of results to return. The max for this argument is the SEARCH_LIMIT imposed by Globus Search.
+        limit (int): The maximum number of results to return. The max for this argument is
+                     the SEARCH_LIMIT imposed by Globus Search.
         match_all (bool): If True, will add elements with AND.
                           If False, will use OR.
                           Default True.
@@ -648,9 +648,8 @@ class Forge:
         list (if info=False): The results.
         tuple (if info=True): The results, and a dictionary of query information.
         """
-        return (self.match_contacts(contacts, type=type, match_all=match_all)
-            .search(limit=limit, info=info))
-
+        return (self.match_contacts(contacts, type=type,
+                                    match_all=match_all).search(limit=limit, info=info))
 
     def aggregate_source(self, sources):
         """Aggregate all records from a given source.
