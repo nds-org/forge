@@ -534,7 +534,8 @@ def test_forge_match_contributors():
     # Institution
     f3 = forge.Forge()
     contributors3 = ["\"The University of Chicago\""]
-    res3, info3 = f3.match_contributors(contributors3, type="institution").search(limit=10, info=True)
+    res3, info3 = f3.match_contributors(contributors3, type="institution").search(limit=10,
+                                                                                  info=True)
     assert res3 != []
     check_val3 = check_field(res3, "mdf.data_contributor", "The University of Chicago")
     assert check_val3 == 1
@@ -680,10 +681,9 @@ def test_forge_search_by_contributors():
     contributors1 = ["\"Evan Pike\""]
     contributors2 = ["Pike"]
     contributors3 = ["dep78@uchicago.edu"]
-    contributors4 = ["dep78"] # github
     res1, info1 = f1.search_by_contributors(contributors1, limit=10, info=True)
     res2, info2 = f2.search_by_contributors(contributors2, limit=10, info=True)
-    res3, info3 = f3.search_by_contributors(contributors3, type = "email", limit=10, info=True)
+    res3, info3 = f3.search_by_contributors(contributors3, type="email", limit=10, info=True)
     assert check_field(res1, "mdf.data_contributor", "Evan Pike") == 1
     assert check_field(res2, "mdf.data_contributor", "Evan Pike") == 1
     assert check_field(res3, "mdf.data_contributor", "dep78@uchicago.edu") == 1
