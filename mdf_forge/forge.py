@@ -95,7 +95,7 @@ class Forge:
                 self.__query.and_join(new_group)
             else:
                 self.__query.or_join(new_group)
-        self.__query.field(field, value)
+        self.__query.field(str(field), str(value))
         return self
 
     def exclude_field(self, field, value, new_group=False):
@@ -118,7 +118,7 @@ class Forge:
         # OR would not make much sense for excluding
         if self.__query.initialized:
             self.__query.and_join(new_group)
-        self.__query.negate().field(field, value)
+        self.__query.negate().field(str(field), str(value))
         return self
 
     def search(self, q=None, advanced=False, limit=SEARCH_LIMIT, info=False,
@@ -221,7 +221,8 @@ class Forge:
 # * Expanded functions
 # ***********************************************
 
-    def match_range(self, field, start, stop, inclusive=True, required=True, new_group=False):
+    def match_range(self, field, start="*", stop="*", inclusive=True,
+                    required=True, new_group=False):
         """Add a field:[some range] term to the query.
         Matches will have field == value in range.
 
@@ -241,6 +242,15 @@ class Forge:
         Returns:
         self (Forge): For chaining.
         """
+        # Accept None as *
+        if start is None:
+            start = "*"
+        if stop is None:
+            stop = "*"
+        # No-op on *-*
+        if start == "*" and stop == "*":
+            return self
+
         if inclusive:
             value = "[" + str(start) + " TO " + str(stop) + "]"
         else:
@@ -248,7 +258,8 @@ class Forge:
         self.match_field(field, value, required=required, new_group=new_group)
         return self
 
-    def exclude_range(self, field, start, stop, inclusive=True, new_group=False):
+    def exclude_range(self, field, start="*", stop="*", inclusive=True,
+                      required=True, new_group=False):
         """Exclude a field:[some range] term to the query.
         Matches will have field != values in range.
 
@@ -267,6 +278,15 @@ class Forge:
         Returns:
         self (Forge): For chaining.
         """
+        # Accept None as *
+        if start is None:
+            start = "*"
+        if stop is None:
+            stop = "*"
+        # No-op on *-*
+        if start == "*" and stop == "*":
+            return self
+
         if inclusive:
             value = "[" + str(start) + " TO " + str(stop) + "]"
         else:
@@ -458,6 +478,59 @@ class Forge:
         self.match_field(field="mdf.title", value=titles[0], required=True, new_group=True)
         for title in titles[1:]:
             self.match_field(field="mdf.title", value=title, required=False, new_group=False)
+        return self
+
+    def match_years(self, years=None, start=None, stop=None, inclusive=True):
+        """Add years and limits to the query.
+
+        Arguments:
+        years   (int or string, or list of int or strings): The years to match.
+                    Note that this argument overrides the start, stop, and inclusive arguments.
+        start   (int or string): The lower range of years to match.
+        stop    (int or string): The upper range of years to match.
+        inclusive (bool): If True, the start and stop values will be included in the search.
+                          If False, they will be excluded.
+                          Default True.
+        Returns:
+        self (Forge): For chaining.
+        """
+        # If nothing supplied, nothing to match
+        if years is None and start is None and stop is None:
+            return self
+
+        if years is not None and years != []:
+            if not isinstance(years, list):
+                years = [years]
+            years_int = []
+            for year in years:
+                try:
+                    y_int = int(year)
+                    years_int.append(y_int)
+                except ValueError:
+                    print_("Invalid year: '", year, "'", sep="")
+
+            # Only match years if valid years were supplied
+            if len(years_int) > 0:
+                self.match_field(field="mdf.year", value=years_int[0], required=True,
+                                 new_group=True)
+                for year in years_int[1:]:
+                    self.match_field(field="mdf.year", value=year, required=False, new_group=False)
+        else:
+            if start is not None:
+                try:
+                    start = int(start)
+                except ValueError:
+                    print_("Invalid start year: '", start, "'", sep="")
+                    start = None
+            if stop is not None:
+                try:
+                    stop = int(stop)
+                except ValueError:
+                    print_("Invalid stop year: '", stop, "'", sep="")
+                    stop = None
+
+            self.match_range(field="mdf.year", start=start, stop=stop,
+                             inclusive=inclusive, required=True, new_group=True)
         return self
 
     def match_resource_types(self, types):
