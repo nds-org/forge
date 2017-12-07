@@ -682,7 +682,7 @@ def test_forge_search_by_authors():
     authors3 = ["TORRALBA.Antonio@nims.go.jp"]
     res1, info1 = f1.search_by_authors(authors1, limit=10, info=True)
     res2, info2 = f2.search_by_authors(authors2, limit=100, info=True)
-    res3, info3 = f3.search_by_authors(authors3, type = "email", limit=10, info=True)
+    res3, info3 = f3.search_by_authors(authors3, type="email", limit=10, info=True)
     assert check_field(res1, "mdf.author", "Michael J. Gillan") == 1
     assert check_field(res2, "mdf.author", "Tsuyoshi Miyazaki") == 1
     assert check_field(res3, "mdf.author", "torralba.antonio@nims.go.jp") == -1

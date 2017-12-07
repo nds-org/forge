@@ -400,7 +400,6 @@ class Forge:
                              new_group=False)
         return self
 
-
     def match_authors(self, authors, type=None, match_all=True):
         """Add authors to the query.
         Arguments:
@@ -424,9 +423,11 @@ class Forge:
         else:
             subfields = ["given_name", "family_name", "full_name"]
 
-        self.match_field(field="mdf.author." + subfields[0], value=authors[0], required=False, new_group=True)
+        self.match_field(field="mdf.author." + subfields[0], value=authors[0], required=False,
+                         new_group=True)
         for subfield in subfields[1:]:
-            self.match_field(field="mdf.author." + subfield, value=authors[0], required=False, new_group=False)
+            self.match_field(field="mdf.author." + subfield, value=authors[0], required=False,
+                             new_group=False)
 
         for author in authors[1:]:
             self.match_field(field="mdf.author." + subfields[0], value=author, required=match_all,
@@ -435,7 +436,6 @@ class Forge:
                 self.match_field(field="mdf.author." + subfield, value=author, required=False,
                                  new_group=False)
         return self
-
 
     def match_tags(self, tags, match_all=True):
         """Add tags to the query.
@@ -609,7 +609,8 @@ class Forge:
         Arguments:
         authors (list of str): The author names to match. Default [].
         type (str): Type of authors information such as email, institution, github. Default None
-        limit (int): The maximum number of results to return. The max for this argument is the SEARCH_LIMIT imposed by Globus Search.
+        limit (int): The maximum number of results to return. The max for this argument
+                     is the SEARCH_LIMIT imposed by Globus Search.
         match_all (bool): If True, will add elements with AND.
                           If False, will use OR.
                           Default True.
@@ -622,7 +623,6 @@ class Forge:
         """
         return (self.match_authors(authors, type=type, match_all=match_all)
                 .search(limit=limit, info=info))
-
 
     def search_by_tags(self, tags, limit=None, match_all=True, info=False):
         """Execute a search for the given tag.
