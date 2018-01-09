@@ -11,4 +11,4 @@ USER $NB_USER
 RUN cd /forge; \
     pip install --user -e .
 
-CMD ["sh", "-c", "/forge/start-notebook-with-examples.sh --NotebookApp.token=${APP_TOKEN}"]
+CMD ["sh", "-c", "/forge/docs/start-notebook-with-examples.sh --NotebookApp.token=${APP_TOKEN}"]
