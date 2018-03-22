@@ -29,7 +29,7 @@ class Forge:
     __services = ["mdf", "transfer", "search"]
     __app_name = "MDF_Forge"
 
-    def __init__(self, index=__default_index, local_ep=None, anonymous=False, **kwargs):
+    def __init__(self, index=__default_index, local_ep=None, anonymous=False, oauth_tokens=None, **kwargs):
         """Initialize the Forge instance.
 
         Arguments:
@@ -41,28 +41,41 @@ class Forge:
                           Please note that authentication is required for some Forge
                               functionality, including using Globus Transfer.
 
+        oauth_tokens Dictionary: Dictionary that maps oauth scopes to keys
+
         Keyword Arguments:
         services (list of str): The services to authenticate for.
                                 Advanced users only.
         """
         self.__anonymous = anonymous
+        self.__oauth_tokens = oauth_tokens
         self.index = index
         self.local_ep = local_ep
 
         services = kwargs.get('services', self.__services)
 
-        if self.__anonymous:
-            clients = toolbox.anonymous_login(services)
-        else:
-            clients = toolbox.login(credentials={
-                                    "app_name": self.__app_name,
-                                    "services": services,
-                                    "index": self.index})
-        self.__search_client = clients.get("search")
-        self.__transfer_client = clients.get("transfer")
-        self.__mdf_authorizer = clients.get("mdf")
+        if self.__oauth_tokens:
+            self.__transfer_client = globus_sdk.TransferClient(authorizer=globus_sdk.AccessTokenAuthorizer(
+                oauth_tokens["urn:globus:auth:scope:transfer.api.globus.org:all"]))
 
-        self.__query = Query(self.__search_client)
+            self.__search_client = globus_sdk.SearchClient(authorizer=globus_sdk.AccessTokenAuthorizer(
+                oauth_tokens["urn:globus:auth:scope:search.api.globus.org:search"]))
+
+            self.__query = Query(self.__search_client)
+
+        else:
+            if self.__anonymous:
+                clients = toolbox.anonymous_login(services)
+            else:
+                clients = toolbox.login(credentials={
+                                        "app_name": self.__app_name,
+                                        "services": services,
+                                        "index": self.index})
+            self.__search_client = clients.get("search")
+            self.__transfer_client = clients.get("transfer")
+            self.__mdf_authorizer = clients.get("mdf")
+
+            self.__query = Query(self.__search_client)
 
     @property
     def search_client(self):
